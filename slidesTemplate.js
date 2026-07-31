@@ -4,8 +4,6 @@
 // DRIVE_FOLDER_ID (carpeta destino) y PARRILLA_TEMPLATE_ID (el deck plantilla).
 import { google } from 'googleapis';
 
-const TEMPLATE_ID = process.env.PARRILLA_TEMPLATE_ID || '';
-
 function clients() {
   const oauth = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
   oauth.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
@@ -18,13 +16,13 @@ const abbr = (c) => c.replace(/instagram/i, 'IG').replace(/facebook/i, 'FB').rep
 
 export function templateConfigured() {
   return !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET &&
-            process.env.GOOGLE_REFRESH_TOKEN && process.env.DRIVE_FOLDER_ID && TEMPLATE_ID);
+            process.env.GOOGLE_REFRESH_TOKEN && process.env.DRIVE_FOLDER_ID && process.env.PARRILLA_TEMPLATE_ID);
 }
 
 export async function crearParrillaTemplate(mes, posts) {
   const { drive, slides } = clients();
   const copy = await drive.files.copy({
-    fileId: TEMPLATE_ID,
+    fileId: process.env.PARRILLA_TEMPLATE_ID,
     requestBody: { name: `Parrilla ${mes}`, parents: [process.env.DRIVE_FOLDER_ID] },
     supportsAllDrives: true, fields: 'id',
   });
