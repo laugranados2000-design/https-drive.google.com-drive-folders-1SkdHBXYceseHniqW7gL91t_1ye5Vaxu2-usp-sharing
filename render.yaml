@@ -2,7 +2,7 @@
 # Luego define en el dashboard las variables marcadas sync:false (secretas).
 services:
   - type: web
-    name: cm-agent            # cámbialo por el nombre de tu cliente
+    name: agente-florhuila
     runtime: node
     plan: free                # "starter" (~$7/mes) para que no se duerma
     buildCommand: npm install
