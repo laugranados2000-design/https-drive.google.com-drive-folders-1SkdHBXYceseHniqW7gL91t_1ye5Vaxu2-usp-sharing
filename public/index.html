@@ -241,7 +241,7 @@
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-access-key': accessKey },
+        headers: { 'Content-Type': 'application/json', 'x-access-key': encodeURIComponent(accessKey) },
         body: JSON.stringify({ message: text, history }),
         signal: ac.signal,
       });

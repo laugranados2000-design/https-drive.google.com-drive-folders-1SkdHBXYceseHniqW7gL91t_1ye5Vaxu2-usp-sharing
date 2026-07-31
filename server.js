@@ -87,7 +87,9 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 function checkAuth(req, res, next) {
   if (!ACCESS_PASSWORD) return next();
-  if ((req.get('x-access-key') || '') === ACCESS_PASSWORD) return next();
+  let key = req.get('x-access-key') || '';
+  try { key = decodeURIComponent(key); } catch {}
+  if (key === ACCESS_PASSWORD) return next();
   return res.status(401).json({ error: 'unauthorized' });
 }
 app.get('/api/health', (_req, res) => res.json({ ok: true, brand: BRAND, model: MODEL, authRequired: !!ACCESS_PASSWORD, personaChars: PERSONA.length, driveReady: templateConfigured() }));
