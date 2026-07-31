@@ -60,13 +60,13 @@ async function main() {
     ...textBox({ pageId: fichaId, id: 'pilar', x: 390, y: 58, w: 175, h: 26, text: 'Pilar: {{PILAR}}', fontSize: 10, color: DARK }),
     // Copy
     ...textBox({ pageId: fichaId, id: 'copyLabel', x: 30, y: 96, w: 200, h: 20, text: 'COPY / GUION', fontSize: 10, bold: true, color: BRAND_RED }),
-    ...textBox({ pageId: fichaId, id: 'copy', x: 30, y: 118, w: 540, h: 130, text: '{{COPY}}', fontSize: 12, color: DARK }),
+    ...textBox({ pageId: fichaId, id: 'copyBody', x: 30, y: 118, w: 540, h: 130, text: '{{COPY}}', fontSize: 12, color: DARK }),
     // Caption
     ...textBox({ pageId: fichaId, id: 'captionLabel', x: 30, y: 256, w: 200, h: 20, text: 'CAPTION', fontSize: 10, bold: true, color: BRAND_RED }),
     ...textBox({ pageId: fichaId, id: 'caption', x: 30, y: 278, w: 540, h: 70, text: '{{CAPTION}}', fontSize: 11, color: DARK }),
     // Idea visual
     ...textBox({ pageId: fichaId, id: 'ideaLabel', x: 30, y: 356, w: 200, h: 20, text: 'IDEA VISUAL', fontSize: 10, bold: true, color: BRAND_RED }),
-    ...textBox({ pageId: fichaId, id: 'idea', x: 30, y: 378, w: 540, h: 60, text: '{{IDEA}}', fontSize: 11, color: DARK }),
+    ...textBox({ pageId: fichaId, id: 'ideaBody', x: 30, y: 378, w: 540, h: 60, text: '{{IDEA}}', fontSize: 11, color: DARK }),
   ];
   await slides.presentations.batchUpdate({ presentationId, requestBody: { requests: fichaReqs } });
 
