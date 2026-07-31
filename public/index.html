@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agente Florhuila</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #17120a;
+      --surface: #211a0f;
+      --surface2: #2c2415;
+      --border: #3d3320;
+      --accent: #C8102E;        /* rojo Florhuila (ajustar con el brand book real) */
+      --accent-dim: #7a0a1c;
+      --accent2: #F2A71B;       /* dorado / amarillo arroz */
+      --accent3: #4C8C2B;       /* verde, guiño tricolor colombiano */
+      --text: #f4ecdd;
+      --text-dim: #b3a685;
+      --user-bubble: #3a2c12;
+      --ai-bubble: #211a0f;
+      --danger: #ff6b6b;
+      --success: #7DAA3B;
+      --radius: 12px;
+    }
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+    .app { display: flex; flex-direction: column; height: 100vh; max-width: 800px; margin: 0 auto; }
+
+    header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .header-left { display: flex; align-items: center; gap: 11px; }
+    .logo { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; color: #fff; }
+    header h1 { font-size: 16px; font-weight: 600; }
+    header .sub { font-size: 11px; color: var(--text-dim); }
+    .btn-icon { background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); border-radius: 8px; padding: 6px 11px; font-size: 12px; cursor: pointer; transition: .15s; }
+    .btn-icon:hover { color: var(--text); border-color: var(--accent-dim); }
+
+    .messages { flex: 1; overflow-y: auto; padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+    .messages::-webkit-scrollbar { width: 5px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    .msg { display: flex; gap: 10px; max-width: 100%; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .msg.user { flex-direction: row-reverse; }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 2px; font-weight: 700; }
+    .msg.user .avatar { background: var(--accent-dim); }
+    .msg.ai .avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+    .bubble { max-width: calc(100% - 44px); padding: 11px 15px; border-radius: var(--radius); font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+    .msg.user .bubble { background: var(--user-bubble); border: 1px solid #2a3d7a; border-bottom-right-radius: 4px; }
+    .msg.ai .bubble { background: var(--ai-bubble); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .bubble code { background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 12.5px; }
+
+    .typing-indicator { display: flex; gap: 4px; padding: 11px 15px; background: var(--ai-bubble); border: 1px solid var(--border); border-radius: var(--radius); border-bottom-left-radius: 4px; width: fit-content; }
+    .typing-indicator span { width: 6px; height: 6px; background: var(--text-dim); border-radius: 50%; animation: bounce 1.2s infinite; }
+    .typing-indicator span:nth-child(2) { animation-delay: .2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+    .system-msg { text-align: center; font-size: 12px; color: var(--text-dim); padding: 4px 0; }
+
+    .input-area { padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+    .input-row { display: flex; gap: 10px; align-items: flex-end; }
+    textarea { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14.5px; font-family: inherit; padding: 11px 14px; resize: none; min-height: 46px; max-height: 180px; line-height: 1.5; outline: none; transition: border-color .15s; }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--text-dim); }
+    .send-btn { background: var(--accent); border: none; border-radius: var(--radius); color: #fff; font-size: 17px; width: 46px; height: 46px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: .15s; }
+    .send-btn:hover { background: #1f59ed; }
+    .send-btn:active { transform: scale(.95); }
+    .send-btn:disabled { background: var(--surface2); color: var(--text-dim); cursor: default; }
+    .hint { font-size: 11px; color: var(--text-dim); margin-top: 8px; text-align: center; }
+
+    .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--text-dim); text-align: center; padding: 40px 20px; user-select: none; }
+    .empty-icon { font-size: 42px; }
+    .empty-state h2 { color: var(--text); font-size: 18px; font-weight: 600; }
+    .empty-state p { font-size: 14px; max-width: 380px; line-height: 1.6; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 6px; }
+    .suggestion-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 7px 15px; font-size: 13px; cursor: pointer; color: var(--text-dim); transition: .15s; }
+    .suggestion-chip:hover { color: var(--text); border-color: var(--accent); }
+
+    /* Login gate */
+    .gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+    .gate-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 360px; text-align: center; }
+    .gate-card .logo { margin: 0 auto 16px; width: 52px; height: 52px; font-size: 24px; }
+    .gate-card h2 { font-size: 19px; margin-bottom: 6px; }
+    .gate-card p { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
+    .gate-card input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; padding: 12px 14px; outline: none; margin-bottom: 12px; }
+    .gate-card input:focus { border-color: var(--accent); }
+    .gate-card button { width: 100%; background: var(--accent); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 600; padding: 12px; cursor: pointer; }
+    .gate-card button:hover { background: #1f59ed; }
+    .gate-err { color: var(--danger); font-size: 13px; min-height: 18px; margin-top: 4px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- Gate de acceso -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <div class="logo">🍚</div>
+    <h2>Agente Florhuila</h2>
+    <p>Ingresa la clave de acceso del equipo para continuar.</p>
+    <input type="password" id="gatePass" placeholder="Clave de acceso" autocomplete="current-password" />
+    <button id="gateBtn">Entrar</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
+<div class="app hidden" id="app">
+  <header>
+    <div class="header-left">
+      <div class="logo">🍚</div>
+      <div>
+        <h1>Agente Florhuila</h1>
+        <div class="sub">Community manager de Arroz Florhuila</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-icon" id="clearBtn" title="Limpiar conversación">⊘ Limpiar</button>
+    </div>
+  </header>
+
+  <div class="messages" id="messages">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🍚</div>
+      <h2>¡Hola! Soy el agente de Florhuila 🇨🇴</h2>
+      <p>Pídeme un post para Instagram, Facebook o TikTok, o pregúntame lo que quieras. Dime el tema u ocasión y, si lo tienes, el territorio y el formato.</p>
+      <div class="suggestions" id="suggestions">
+        <button class="suggestion-chip">Escríbeme un post para Instagram</button>
+        <button class="suggestion-chip">Un carrusel sobre dichos colombianos</button>
+        <button class="suggestion-chip">Guion de Reel de Arrocín para TikTok</button>
+        <button class="suggestion-chip">Armame la parrilla de septiembre</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea id="input" placeholder="Escribe aquí…" rows="1"></textarea>
+      <button class="send-btn" id="sendBtn">&#10148;</button>
+    </div>
+    <div class="hint">Enter para enviar &nbsp;·&nbsp; Shift+Enter para nueva línea</div>
+  </div>
+</div>
+
+<script>
+  const gate = document.getElementById('gate');
+  const gatePass = document.getElementById('gatePass');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateErr = document.getElementById('gateErr');
+  const appEl = document.getElementById('app');
+  const messagesEl = document.getElementById('messages');
+  const inputEl = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const emptyState = document.getElementById('emptyState');
+  const suggestions = document.getElementById('suggestions');
+
+  let history = [];
+  let streaming = false;
+  let accessKey = localStorage.getItem('rd_key') || '';
+
+  // ── Gate ───────────────────────────────────────────────────────────────────
+  async function tryLogin(password) {
+    const r = await fetch('/api/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    return r.ok;
+  }
+  function openApp() { gate.classList.add('hidden'); appEl.classList.remove('hidden'); inputEl.focus(); }
+
+  gateBtn.addEventListener('click', async () => {
+    gateErr.textContent = '';
+    const ok = await tryLogin(gatePass.value);
+    if (ok) { accessKey = gatePass.value; localStorage.setItem('rd_key', accessKey); openApp(); }
+    else gateErr.textContent = 'Clave incorrecta.';
+  });
+  gatePass.addEventListener('keydown', (e) => { if (e.key === 'Enter') gateBtn.click(); });
+
+  // Auto-entrar si ya hay clave guardada (o si no se requiere clave)
+  (async () => {
+    const ok = await tryLogin(accessKey);
+    if (ok) openApp();
+  })();
+
+  // ── Auto-resize ─────────────────────────────────────────────────────────────
+  inputEl.addEventListener('input', () => {
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 180) + 'px';
+  });
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!streaming) sendMessage(); }
+  });
+  sendBtn.addEventListener('click', () => { if (!streaming) sendMessage(); });
+  suggestions.addEventListener('click', (e) => {
+    const chip = e.target.closest('.suggestion-chip');
+    if (!chip || streaming) return;
+    inputEl.value = chip.textContent; sendMessage();
+  });
+  clearBtn.addEventListener('click', () => {
+    history = []; messagesEl.innerHTML = ''; messagesEl.appendChild(emptyState); emptyState.style.display = '';
+  });
+
+  // ── Rendering ───────────────────────────────────────────────────────────────
+  function hideEmptyState() { emptyState.style.display = 'none'; }
+  function appendMsg(role, text) {
+    hideEmptyState();
+    const row = document.createElement('div'); row.className = `msg ${role}`;
+    const avatar = document.createElement('div'); avatar.className = 'avatar';
+    avatar.textContent = role === 'user' ? '🙂' : 'dP';
+    const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = text;
+    row.appendChild(avatar); row.appendChild(bubble); messagesEl.appendChild(row); scrollBottom();
+    return bubble;
+  }
+  function appendSystem(text) {
+    const el = document.createElement('div'); el.className = 'system-msg'; el.textContent = text;
+    messagesEl.appendChild(el); scrollBottom();
+  }
+  function appendTyping() {
+    hideEmptyState();
+    const row = document.createElement('div'); row.className = 'msg ai';
+    const avatar = document.createElement('div'); avatar.className = 'avatar'; avatar.textContent = 'dP';
+    const ind = document.createElement('div'); ind.className = 'typing-indicator'; ind.innerHTML = '<span></span><span></span><span></span>';
+    row.appendChild(avatar); row.appendChild(ind); messagesEl.appendChild(row); scrollBottom();
+    return row;
+  }
+  function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  // ── Send ────────────────────────────────────────────────────────────────────
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = ''; inputEl.style.height = 'auto';
+    streaming = true; sendBtn.disabled = true;
+    appendMsg('user', text);
+    const typingRow = appendTyping();
+    let typingRemoved = false, aiBubble = null, aiText = '';
+    const ensureTypingGone = () => { if (!typingRemoved) { typingRow.remove(); typingRemoved = true; } };
+
+    const ac = new AbortController();
+    const timeoutId = setTimeout(() => ac.abort(), 300000);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-access-key': accessKey },
+        body: JSON.stringify({ message: text, history }),
+        signal: ac.signal,
+      });
+      if (res.status === 401) { ensureTypingGone(); appendSystem('⚠ Sesión expirada. Recarga la página.'); return; }
+      if (!res.ok) throw new Error(`Error del servidor ${res.status}`);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '', done = false;
+      while (!done) {
+        const { done: streamDone, value } = await reader.read();
+        if (streamDone) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n'); buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6).trim();
+          if (payload === '[DONE]') { done = true; break; }
+          let parsed; try { parsed = JSON.parse(payload); } catch { continue; }
+          if (parsed.error) { ensureTypingGone(); appendSystem(`⚠ ${parsed.error}`); done = true; break; }
+          if (parsed.text) {
+            ensureTypingGone();
+            if (!aiBubble) aiBubble = appendMsg('ai', '');
+            aiText += parsed.text; aiBubble.textContent = aiText; scrollBottom();
+          }
+        }
+      }
+    } catch (err) {
+      ensureTypingGone();
+      appendSystem(err.name === 'AbortError' ? 'Tarea cancelada.' : `⚠ ${err.message}`);
+    } finally {
+      clearTimeout(timeoutId); ensureTypingGone();
+      history.push({ role: 'user', content: text });
+      if (aiText) history.push({ role: 'assistant', content: aiText });
+      streaming = false; sendBtn.disabled = false; inputEl.focus();
+    }
+  }
+</script>
+</body>
+</html>
