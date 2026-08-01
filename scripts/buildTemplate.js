@@ -14,8 +14,8 @@ const PT = 'PT';
 const dim = (magnitude) => ({ magnitude, unit: PT });
 const pos = (x, y) => ({ translateX: x, translateY: y, scaleX: 1, scaleY: 1, unit: PT });
 
-const BRAND_RED = { red: 0.784, green: 0.063, blue: 0.180 };   // #C8102E
-const BRAND_GOLD = { red: 0.949, green: 0.655, blue: 0.106 };  // #F2A71B
+const BRAND_RED = { red: 228 / 255, green: 27 / 255, blue: 20 / 255 };   // #E41B14 (del logo real)
+const BRAND_GOLD = { red: 0.949, green: 0.655, blue: 0.106 };            // #F2A71B
 const WHITE = { red: 1, green: 1, blue: 1 };
 const DARK = { red: 0.15, green: 0.12, blue: 0.08 };
 
