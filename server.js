@@ -13,14 +13,20 @@ import { crearParrillaTemplate, templateConfigured } from './slidesTemplate.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '.env'), override: true });
 
+// Quita cualquier caracter fuera de ASCII imprimible (a veces se cuela algo raro
+// al copiar/pegar credenciales en paneles como Render) — las credenciales válidas
+// nunca usan esos caracteres, así que es seguro limpiarlas así.
+const clean = (v) => (v || '').replace(/[^\x20-\x7E]/g, '').trim();
+
 const PORT = process.env.PORT || 3000;
 const MODEL = process.env.MODEL || 'claude-sonnet-4-6';
-const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
+const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || ''; // puede llevar tildes/ñ; no se manda como header crudo
 const MAX_TOKENS = Number(process.env.MAX_TOKENS || 8192);
 const BRAND = process.env.BRAND_NAME || 'la marca';
 
-if (!process.env.ANTHROPIC_API_KEY) { console.error('❌ Falta ANTHROPIC_API_KEY en .env'); process.exit(1); }
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const ANTHROPIC_API_KEY = clean(process.env.ANTHROPIC_API_KEY);
+if (!ANTHROPIC_API_KEY) { console.error('❌ Falta ANTHROPIC_API_KEY en .env'); process.exit(1); }
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e?.stack || e));
 process.on('uncaughtException', (e) => console.error('[uncaughtException]', e?.stack || e));
 

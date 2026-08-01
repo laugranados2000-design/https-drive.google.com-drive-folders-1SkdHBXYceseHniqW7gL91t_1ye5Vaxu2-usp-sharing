@@ -4,9 +4,14 @@
 // DRIVE_FOLDER_ID (carpeta destino) y PARRILLA_TEMPLATE_ID (el deck plantilla).
 import { google } from 'googleapis';
 
+// Quita cualquier caracter fuera de ASCII imprimible (a veces se cuela algo raro
+// al copiar/pegar credenciales en paneles como Render) — las credenciales válidas
+// nunca usan esos caracteres, así que es seguro limpiarlas así.
+const clean = (v) => (v || '').replace(/[^\x20-\x7E]/g, '').trim();
+
 function clients() {
-  const oauth = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
-  oauth.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+  const oauth = new google.auth.OAuth2(clean(process.env.GOOGLE_CLIENT_ID), clean(process.env.GOOGLE_CLIENT_SECRET));
+  oauth.setCredentials({ refresh_token: clean(process.env.GOOGLE_REFRESH_TOKEN) });
   return { drive: google.drive({ version: 'v3', auth: oauth }), slides: google.slides({ version: 'v1', auth: oauth }) };
 }
 const textOf = (el) => (el.shape?.text?.textElements || []).map(te => te.textRun?.content || '').join('');
