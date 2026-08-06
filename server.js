@@ -5,12 +5,13 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import Anthropic from '@anthropic-ai/sdk';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { crearParrillaTemplate, templateConfigured } from './slidesTemplate.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+console.log('[debug] ¿existe un archivo .env en el servidor?', existsSync(join(__dirname, '.env')));
 dotenv.config({ path: join(__dirname, '.env'), override: true });
 
 // Quita cualquier caracter fuera de ASCII imprimible (a veces se cuela algo raro
@@ -26,6 +27,7 @@ const BRAND = process.env.BRAND_NAME || 'la marca';
 
 const ANTHROPIC_API_KEY = clean(process.env.ANTHROPIC_API_KEY);
 if (!ANTHROPIC_API_KEY) { console.error('❌ Falta ANTHROPIC_API_KEY en .env'); process.exit(1); }
+console.log(`[debug] ANTHROPIC_API_KEY: largo=${ANTHROPIC_API_KEY.length} empieza="${ANTHROPIC_API_KEY.slice(0, 14)}" termina="${ANTHROPIC_API_KEY.slice(-6)}"`);
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e?.stack || e));
 process.on('uncaughtException', (e) => console.error('[uncaughtException]', e?.stack || e));
